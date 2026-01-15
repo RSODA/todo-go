@@ -1,0 +1,19 @@
+package todo
+
+import (
+	"net/http"
+
+	"github.com/RSODA/todo-go/internal/models"
+	"github.com/gin-gonic/gin"
+)
+
+func (h *Handler) Create(c *gin.Context) {
+	var todo models.TODO
+
+	if err := c.ShouldBindBodyWithJSON(&todo); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, todo)
+}
