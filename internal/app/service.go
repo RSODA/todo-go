@@ -15,7 +15,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type serviceProvider struct {
+type ServiceProvider struct {
 	httpConfig config.HTTPConfig
 	pgConfig   config.PGConfig
 
@@ -28,11 +28,11 @@ type serviceProvider struct {
 	router      *gin.Engine
 }
 
-func NewService() *serviceProvider {
-	return &serviceProvider{}
+func NewService() *ServiceProvider {
+	return &ServiceProvider{}
 }
 
-func (sp *serviceProvider) HTTPConfig() config.HTTPConfig {
+func (sp *ServiceProvider) HTTPConfig() config.HTTPConfig {
 	if sp.httpConfig == nil {
 		cfg, err := config.NewHTTPConfig()
 		if err != nil {
@@ -45,7 +45,7 @@ func (sp *serviceProvider) HTTPConfig() config.HTTPConfig {
 	return sp.httpConfig
 }
 
-func (sp *serviceProvider) PGConfig(_ context.Context) config.PGConfig {
+func (sp *ServiceProvider) PGConfig(_ context.Context) config.PGConfig {
 	if sp.pgConfig == nil {
 		cfg, err := config.NewPGConfig()
 		if err != nil {
@@ -58,16 +58,16 @@ func (sp *serviceProvider) PGConfig(_ context.Context) config.PGConfig {
 	return sp.pgConfig
 }
 
-func (sp *serviceProvider) DB(ctx context.Context) *pgxpool.Pool {
+func (sp *ServiceProvider) DB(ctx context.Context) *pgxpool.Pool {
 	if sp.db == nil {
-		cl, err := pgxpool.New(ctx, sp.pgConfig.DSN())
+		cl, err := pgxpool.New(ctx, sp.PGConfig(ctx).DSN())
 		if err != nil {
 			log.Fatal("Failed to connect to database", err)
 		}
 
 		err = cl.Ping(ctx)
 		if err != nil {
-			log.Fatalf("Failed to ping database", err)
+			log.Fatal("Failed to ping database", err)
 		}
 
 		sp.db = cl
@@ -76,18 +76,18 @@ func (sp *serviceProvider) DB(ctx context.Context) *pgxpool.Pool {
 	return sp.db
 }
 
-func (sp *serviceProvider) Repo(_ context.Context) repo.Repo {
+func (sp *ServiceProvider) Repo(ctx context.Context) repo.Repo {
 	if sp.repo == nil {
-		repo := postgress.NewPostgres(sp.db)
-		sp.repo = repo
+		r := postgress.NewPostgres(sp.DB(ctx))
+		sp.repo = r
 	}
 
 	return sp.repo
 }
 
-func (sp *serviceProvider) Service(_ context.Context) service.Service {
+func (sp *ServiceProvider) Service(ctx context.Context) service.Service {
 	if sp.service == nil {
-		s := ts.NewTODOService(sp.repo)
+		s := ts.NewTODOService(sp.Repo(ctx))
 
 		sp.service = s
 	}
@@ -95,9 +95,9 @@ func (sp *serviceProvider) Service(_ context.Context) service.Service {
 	return sp.service
 }
 
-func (sp *serviceProvider) Handler(_ context.Context) *todo.Handler {
+func (sp *ServiceProvider) Handler(ctx context.Context) *todo.Handler {
 	if sp.todoHandler == nil {
-		h := todo.NewHandler(sp.service)
+		h := todo.NewHandler(sp.Service(ctx))
 
 		sp.todoHandler = h
 	}
@@ -105,9 +105,9 @@ func (sp *serviceProvider) Handler(_ context.Context) *todo.Handler {
 	return sp.todoHandler
 }
 
-func (sp *serviceProvider) Router() *gin.Engine {
+func (sp *ServiceProvider) Router(ctx context.Context) *gin.Engine {
 	if sp.router == nil {
-		r := router.NewRouter(sp.todoHandler)
+		r := router.NewRouter(sp.Handler(ctx))
 
 		sp.router = r
 	}

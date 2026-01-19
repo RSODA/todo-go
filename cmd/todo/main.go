@@ -14,7 +14,7 @@ func main() {
 		panic(err)
 	}
 
-	err = a.RunHTTP()
+	err = a.RunHTTP(ctx)
 	if err != nil {
 		panic(err)
 	}

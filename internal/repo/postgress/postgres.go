@@ -14,7 +14,7 @@ const (
 	descriptionColumn = "description"
 	isCompleteColumn  = "is_complete"
 	createdAtColumn   = "created_at"
-	taskIdColumn      = "task_id"
+	todoIdColumn      = "todo_id"
 )
 
 type postgres struct {

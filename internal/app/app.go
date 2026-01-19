@@ -7,7 +7,7 @@ import (
 )
 
 type App struct {
-	serviceProvider *serviceProvider
+	serviceProvider *ServiceProvider
 }
 
 func NewApp(ctx context.Context) (*App, error) {
@@ -22,7 +22,7 @@ func NewApp(ctx context.Context) (*App, error) {
 }
 
 func (a *App) initDeps(ctx context.Context) error {
-	inits := []func(ctx context.Context) error{
+	inits := []func(context.Context) error{
 		a.initConfig,
 		a.initServiceProvider,
 	}
@@ -37,7 +37,7 @@ func (a *App) initDeps(ctx context.Context) error {
 	return nil
 }
 
-func (a *App) initConfig(ctx context.Context) error {
+func (a *App) initConfig(_ context.Context) error {
 	err := config.Load(".env")
 	if err != nil {
 		return err
@@ -46,13 +46,13 @@ func (a *App) initConfig(ctx context.Context) error {
 	return nil
 }
 
-func (a *App) initServiceProvider(ctx context.Context) error {
+func (a *App) initServiceProvider(_ context.Context) error {
 	a.serviceProvider = NewService()
 	return nil
 }
 
-func (a *App) RunHTTP() error {
-	return a.serviceProvider.Router().Run(
+func (a *App) RunHTTP(ctx context.Context) error {
+	return a.serviceProvider.Router(ctx).Run(
 		a.serviceProvider.HTTPConfig().Address(),
 	)
 }
