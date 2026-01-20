@@ -11,6 +11,7 @@ func NewRouter(h *todo.Handler) *gin.Engine {
 	r.Use(gin.Recovery(), gin.Logger())
 
 	r.POST("api/v1/todo/create", h.Create)
+	r.GET("api/v1/todo/get/:id", h.Get)
 
 	return r
 }

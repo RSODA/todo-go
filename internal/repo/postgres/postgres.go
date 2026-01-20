@@ -1,4 +1,4 @@
-package postgress
+package postgres
 
 import (
 	"github.com/RSODA/todo-go/internal/repo"

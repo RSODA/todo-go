@@ -7,7 +7,7 @@ import (
 	"github.com/RSODA/todo-go/internal/config"
 	"github.com/RSODA/todo-go/internal/handlers/todo"
 	"github.com/RSODA/todo-go/internal/repo"
-	"github.com/RSODA/todo-go/internal/repo/postgress"
+	"github.com/RSODA/todo-go/internal/repo/postgres"
 	"github.com/RSODA/todo-go/internal/router"
 	"github.com/RSODA/todo-go/internal/service"
 	ts "github.com/RSODA/todo-go/internal/service/todo"
@@ -78,7 +78,7 @@ func (sp *ServiceProvider) DB(ctx context.Context) *pgxpool.Pool {
 
 func (sp *ServiceProvider) Repo(ctx context.Context) repo.Repo {
 	if sp.repo == nil {
-		r := postgress.NewPostgres(sp.DB(ctx))
+		r := postgres.NewPostgres(sp.DB(ctx))
 		sp.repo = r
 	}
 
