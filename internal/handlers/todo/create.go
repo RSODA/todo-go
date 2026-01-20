@@ -18,7 +18,8 @@ func (h *Handler) Create(c *gin.Context) {
 	res, err := h.s.Create(c, &todo)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
-	
+
 	c.JSON(http.StatusOK, res)
 }
