@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"errors"
 	"go/types"
 	"testing"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/RSODA/todo-go/internal/repo/mocks"
 	"github.com/RSODA/todo-go/internal/service/todo"
 	"github.com/gojuno/minimock/v3"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -36,14 +38,43 @@ func TestDeleteService(t *testing.T) {
 			name: "success",
 			args: args{
 				ctx: ctx,
-				id:  int64(1),
+				id:  1,
 			},
 			want: types.Nil{},
 			err:  nil,
 			todoRepoMock: func(mc *minimock.Controller) repo.Repo {
 				mock := mocks.NewRepoMock(mc)
 
-				mock.DeleteMock.Expect(ctx, int64(1)).Return(nil)
+				mock.DeleteMock.Expect(ctx, 1).Return(nil)
+
+				return mock
+			},
+		},
+		{
+			name: "error id <0",
+			args: args{
+				ctx: ctx,
+				id:  -1,
+			},
+			want: types.Nil{},
+			err:  errors.New("invalid id"),
+			todoRepoMock: func(mc *minimock.Controller) repo.Repo {
+				mock := mocks.NewRepoMock(mc)
+
+				return mock
+			},
+		},
+		{
+			name: "Error not found",
+			args: args{
+				ctx: ctx,
+				id:  0,
+			},
+			want: types.Nil{},
+			err:  pgx.ErrNoRows,
+			todoRepoMock: func(mc *minimock.Controller) repo.Repo {
+				mock := mocks.NewRepoMock(mc)
+				mock.DeleteMock.Expect(ctx, 0).Return(pgx.ErrNoRows)
 
 				return mock
 			},
@@ -55,8 +86,7 @@ func TestDeleteService(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			rMock := tt.todoRepoMock(mc)
-			service := todo.NewTODOService(rMock)
+			service := todo.NewTODOService(tt.todoRepoMock(mc))
 
 			err := service.Delete(tt.args.ctx, tt.args.id)
 			require.Equal(t, tt.err, err)

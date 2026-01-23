@@ -7,7 +7,7 @@ import (
 
 func (s *todoService) Delete(ctx context.Context, id int64) error {
 	if id < 0 {
-		return errors.New("ID not valid")
+		return errors.New("invalid id")
 	}
 
 	err := s.r.Delete(ctx, id)

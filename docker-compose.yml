@@ -22,3 +22,15 @@ services:
     environment:
       DB_HOST: pg
 
+  todo:
+    build:
+      context: .
+      dockerfile: go.Dockerfile
+    depends_on:
+      - pg
+    ports:
+      - "7777:7777"
+    environment:
+      DB_HOST: pg
+      DB_PORT: 5432
+

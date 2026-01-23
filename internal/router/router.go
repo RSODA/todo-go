@@ -13,6 +13,7 @@ func NewRouter(h *todo.Handler) *gin.Engine {
 	r.POST("api/v1/todo/create", h.Create)
 	r.GET("api/v1/todo/get/:id", h.Get)
 	r.DELETE("api/v1/todo/delete/:id", h.Delete)
+	r.PUT("api/v1/todo/update", h.UpdateTask)
 
 	return r
 }

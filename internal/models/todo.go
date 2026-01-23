@@ -15,3 +15,8 @@ type Task struct {
 	Description string `json:"description" db:"description"`
 	IsComplete  bool   `json:"is_complete" db:"is_complete"`
 }
+
+type UpdateTaskRequest struct {
+	ID         int64 `json:"id" db:"id"`
+	IsComplete bool  `json:"is_complete" db:"is_complete"`
+}

@@ -10,6 +10,7 @@ import (
 	"github.com/RSODA/todo-go/internal/repo/mocks"
 	"github.com/RSODA/todo-go/internal/service/todo"
 	"github.com/gojuno/minimock/v3"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -55,7 +56,7 @@ func TestGetService(t *testing.T) {
 			todoRepoMock: func(mc *minimock.Controller) repo.Repo {
 				mock := mocks.NewRepoMock(mc)
 
-				mock.GetMock.Expect(context.Background(), int64(1)).Return(&models.TODO{
+				mock.GetMock.Expect(context.Background(), 1).Return(&models.TODO{
 					ID:    1,
 					Title: "test",
 					Tasks: []models.Task{
@@ -72,7 +73,7 @@ func TestGetService(t *testing.T) {
 			},
 		},
 		{
-			name: "err case id <0",
+			name: "err id <0",
 			args: args{
 				ctx: ctx,
 				req: -1,
@@ -85,6 +86,21 @@ func TestGetService(t *testing.T) {
 				return mock
 			},
 		},
+		{
+			name: "error not found",
+			args: args{
+				ctx: ctx,
+				req: 1,
+			},
+			want: nil,
+			err:  pgx.ErrNoRows,
+			todoRepoMock: func(mc *minimock.Controller) repo.Repo {
+				mock := mocks.NewRepoMock(mc)
+				mock.GetMock.Expect(context.Background(), 1).Return(nil, pgx.ErrNoRows)
+
+				return mock
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -93,8 +109,7 @@ func TestGetService(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			rMock := tt.todoRepoMock(mc)
-			service := todo.NewTODOService(rMock)
+			service := todo.NewTODOService(tt.todoRepoMock(mc))
 
 			got, err := service.Get(tt.args.ctx, tt.args.req)
 			require.Equal(t, tt.err, err)

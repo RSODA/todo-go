@@ -128,7 +128,7 @@ func TestCreateService(t *testing.T) {
 			},
 		},
 		{
-			name: "Err case. Empty tasks",
+			name: "Err case empty tasks",
 			args: args{
 				ctx: ctx,
 				req: &models.TODO{
@@ -142,6 +142,35 @@ func TestCreateService(t *testing.T) {
 				return mock
 			},
 		},
+		{
+			name: "Err on repo layer",
+			args: args{
+				ctx: ctx,
+				req: &models.TODO{
+					Title: "Empty",
+					Tasks: []models.Task{
+						{
+							Description: "Create",
+						},
+					},
+				},
+			},
+			want: nil,
+			err:  errors.New("repo layer error"),
+			todoRepoMock: func(mc *minimock.Controller) repo.Repo {
+				mock := mocks.NewRepoMock(mc)
+				mock.CreateMock.Expect(ctx, &models.TODO{
+					Title: "Empty",
+					Tasks: []models.Task{
+						{
+							Description: "Create",
+						},
+					},
+				}).Return(nil, errors.New("repo layer error"))
+
+				return mock
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -149,9 +178,8 @@ func TestCreateService(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-
-			rMock := tt.todoRepoMock(mc)
-			todoService := todo.NewTODOService(rMock)
+			
+			todoService := todo.NewTODOService(tt.todoRepoMock(mc))
 
 			got, err := todoService.Create(tt.args.ctx, tt.args.req)
 			require.Equal(t, tt.err, err)

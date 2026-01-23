@@ -10,4 +10,5 @@ type Repo interface {
 	Get(ctx context.Context, id int64) (*models.TODO, error)
 	Create(ctx context.Context, b *models.TODO) (*models.TODO, error)
 	Delete(ctx context.Context, id int64) error
+	UpdateTask(ctx context.Context, m *models.UpdateTaskRequest) error
 }

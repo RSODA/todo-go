@@ -39,6 +39,13 @@ type RepoMock struct {
 	afterGetCounter  uint64
 	beforeGetCounter uint64
 	GetMock          mRepoMockGet
+
+	funcUpdateTask          func(ctx context.Context, m *models.UpdateTaskRequest) (err error)
+	funcUpdateTaskOrigin    string
+	inspectFuncUpdateTask   func(ctx context.Context, m *models.UpdateTaskRequest)
+	afterUpdateTaskCounter  uint64
+	beforeUpdateTaskCounter uint64
+	UpdateTaskMock          mRepoMockUpdateTask
 }
 
 // NewRepoMock returns a mock for mm_repo.Repo
@@ -57,6 +64,9 @@ func NewRepoMock(t minimock.Tester) *RepoMock {
 
 	m.GetMock = mRepoMockGet{mock: m}
 	m.GetMock.callArgs = []*RepoMockGetParams{}
+
+	m.UpdateTaskMock = mRepoMockUpdateTask{mock: m}
+	m.UpdateTaskMock.callArgs = []*RepoMockUpdateTaskParams{}
 
 	t.Cleanup(m.MinimockFinish)
 
@@ -1091,6 +1101,348 @@ func (m *RepoMock) MinimockGetInspect() {
 	}
 }
 
+type mRepoMockUpdateTask struct {
+	optional           bool
+	mock               *RepoMock
+	defaultExpectation *RepoMockUpdateTaskExpectation
+	expectations       []*RepoMockUpdateTaskExpectation
+
+	callArgs []*RepoMockUpdateTaskParams
+	mutex    sync.RWMutex
+
+	expectedInvocations       uint64
+	expectedInvocationsOrigin string
+}
+
+// RepoMockUpdateTaskExpectation specifies expectation struct of the Repo.UpdateTask
+type RepoMockUpdateTaskExpectation struct {
+	mock               *RepoMock
+	params             *RepoMockUpdateTaskParams
+	paramPtrs          *RepoMockUpdateTaskParamPtrs
+	expectationOrigins RepoMockUpdateTaskExpectationOrigins
+	results            *RepoMockUpdateTaskResults
+	returnOrigin       string
+	Counter            uint64
+}
+
+// RepoMockUpdateTaskParams contains parameters of the Repo.UpdateTask
+type RepoMockUpdateTaskParams struct {
+	ctx context.Context
+	m   *models.UpdateTaskRequest
+}
+
+// RepoMockUpdateTaskParamPtrs contains pointers to parameters of the Repo.UpdateTask
+type RepoMockUpdateTaskParamPtrs struct {
+	ctx *context.Context
+	m   **models.UpdateTaskRequest
+}
+
+// RepoMockUpdateTaskResults contains results of the Repo.UpdateTask
+type RepoMockUpdateTaskResults struct {
+	err error
+}
+
+// RepoMockUpdateTaskOrigins contains origins of expectations of the Repo.UpdateTask
+type RepoMockUpdateTaskExpectationOrigins struct {
+	origin    string
+	originCtx string
+	originM   string
+}
+
+// Marks this method to be optional. The default behavior of any method with Return() is '1 or more', meaning
+// the test will fail minimock's automatic final call check if the mocked method was not called at least once.
+// Optional() makes method check to work in '0 or more' mode.
+// It is NOT RECOMMENDED to use this option unless you really need it, as default behaviour helps to
+// catch the problems when the expected method call is totally skipped during test run.
+func (mmUpdateTask *mRepoMockUpdateTask) Optional() *mRepoMockUpdateTask {
+	mmUpdateTask.optional = true
+	return mmUpdateTask
+}
+
+// Expect sets up expected params for Repo.UpdateTask
+func (mmUpdateTask *mRepoMockUpdateTask) Expect(ctx context.Context, m *models.UpdateTaskRequest) *mRepoMockUpdateTask {
+	if mmUpdateTask.mock.funcUpdateTask != nil {
+		mmUpdateTask.mock.t.Fatalf("RepoMock.UpdateTask mock is already set by Set")
+	}
+
+	if mmUpdateTask.defaultExpectation == nil {
+		mmUpdateTask.defaultExpectation = &RepoMockUpdateTaskExpectation{}
+	}
+
+	if mmUpdateTask.defaultExpectation.paramPtrs != nil {
+		mmUpdateTask.mock.t.Fatalf("RepoMock.UpdateTask mock is already set by ExpectParams functions")
+	}
+
+	mmUpdateTask.defaultExpectation.params = &RepoMockUpdateTaskParams{ctx, m}
+	mmUpdateTask.defaultExpectation.expectationOrigins.origin = minimock.CallerInfo(1)
+	for _, e := range mmUpdateTask.expectations {
+		if minimock.Equal(e.params, mmUpdateTask.defaultExpectation.params) {
+			mmUpdateTask.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmUpdateTask.defaultExpectation.params)
+		}
+	}
+
+	return mmUpdateTask
+}
+
+// ExpectCtxParam1 sets up expected param ctx for Repo.UpdateTask
+func (mmUpdateTask *mRepoMockUpdateTask) ExpectCtxParam1(ctx context.Context) *mRepoMockUpdateTask {
+	if mmUpdateTask.mock.funcUpdateTask != nil {
+		mmUpdateTask.mock.t.Fatalf("RepoMock.UpdateTask mock is already set by Set")
+	}
+
+	if mmUpdateTask.defaultExpectation == nil {
+		mmUpdateTask.defaultExpectation = &RepoMockUpdateTaskExpectation{}
+	}
+
+	if mmUpdateTask.defaultExpectation.params != nil {
+		mmUpdateTask.mock.t.Fatalf("RepoMock.UpdateTask mock is already set by Expect")
+	}
+
+	if mmUpdateTask.defaultExpectation.paramPtrs == nil {
+		mmUpdateTask.defaultExpectation.paramPtrs = &RepoMockUpdateTaskParamPtrs{}
+	}
+	mmUpdateTask.defaultExpectation.paramPtrs.ctx = &ctx
+	mmUpdateTask.defaultExpectation.expectationOrigins.originCtx = minimock.CallerInfo(1)
+
+	return mmUpdateTask
+}
+
+// ExpectMParam2 sets up expected param m for Repo.UpdateTask
+func (mmUpdateTask *mRepoMockUpdateTask) ExpectMParam2(m *models.UpdateTaskRequest) *mRepoMockUpdateTask {
+	if mmUpdateTask.mock.funcUpdateTask != nil {
+		mmUpdateTask.mock.t.Fatalf("RepoMock.UpdateTask mock is already set by Set")
+	}
+
+	if mmUpdateTask.defaultExpectation == nil {
+		mmUpdateTask.defaultExpectation = &RepoMockUpdateTaskExpectation{}
+	}
+
+	if mmUpdateTask.defaultExpectation.params != nil {
+		mmUpdateTask.mock.t.Fatalf("RepoMock.UpdateTask mock is already set by Expect")
+	}
+
+	if mmUpdateTask.defaultExpectation.paramPtrs == nil {
+		mmUpdateTask.defaultExpectation.paramPtrs = &RepoMockUpdateTaskParamPtrs{}
+	}
+	mmUpdateTask.defaultExpectation.paramPtrs.m = &m
+	mmUpdateTask.defaultExpectation.expectationOrigins.originM = minimock.CallerInfo(1)
+
+	return mmUpdateTask
+}
+
+// Inspect accepts an inspector function that has same arguments as the Repo.UpdateTask
+func (mmUpdateTask *mRepoMockUpdateTask) Inspect(f func(ctx context.Context, m *models.UpdateTaskRequest)) *mRepoMockUpdateTask {
+	if mmUpdateTask.mock.inspectFuncUpdateTask != nil {
+		mmUpdateTask.mock.t.Fatalf("Inspect function is already set for RepoMock.UpdateTask")
+	}
+
+	mmUpdateTask.mock.inspectFuncUpdateTask = f
+
+	return mmUpdateTask
+}
+
+// Return sets up results that will be returned by Repo.UpdateTask
+func (mmUpdateTask *mRepoMockUpdateTask) Return(err error) *RepoMock {
+	if mmUpdateTask.mock.funcUpdateTask != nil {
+		mmUpdateTask.mock.t.Fatalf("RepoMock.UpdateTask mock is already set by Set")
+	}
+
+	if mmUpdateTask.defaultExpectation == nil {
+		mmUpdateTask.defaultExpectation = &RepoMockUpdateTaskExpectation{mock: mmUpdateTask.mock}
+	}
+	mmUpdateTask.defaultExpectation.results = &RepoMockUpdateTaskResults{err}
+	mmUpdateTask.defaultExpectation.returnOrigin = minimock.CallerInfo(1)
+	return mmUpdateTask.mock
+}
+
+// Set uses given function f to mock the Repo.UpdateTask method
+func (mmUpdateTask *mRepoMockUpdateTask) Set(f func(ctx context.Context, m *models.UpdateTaskRequest) (err error)) *RepoMock {
+	if mmUpdateTask.defaultExpectation != nil {
+		mmUpdateTask.mock.t.Fatalf("Default expectation is already set for the Repo.UpdateTask method")
+	}
+
+	if len(mmUpdateTask.expectations) > 0 {
+		mmUpdateTask.mock.t.Fatalf("Some expectations are already set for the Repo.UpdateTask method")
+	}
+
+	mmUpdateTask.mock.funcUpdateTask = f
+	mmUpdateTask.mock.funcUpdateTaskOrigin = minimock.CallerInfo(1)
+	return mmUpdateTask.mock
+}
+
+// When sets expectation for the Repo.UpdateTask which will trigger the result defined by the following
+// Then helper
+func (mmUpdateTask *mRepoMockUpdateTask) When(ctx context.Context, m *models.UpdateTaskRequest) *RepoMockUpdateTaskExpectation {
+	if mmUpdateTask.mock.funcUpdateTask != nil {
+		mmUpdateTask.mock.t.Fatalf("RepoMock.UpdateTask mock is already set by Set")
+	}
+
+	expectation := &RepoMockUpdateTaskExpectation{
+		mock:               mmUpdateTask.mock,
+		params:             &RepoMockUpdateTaskParams{ctx, m},
+		expectationOrigins: RepoMockUpdateTaskExpectationOrigins{origin: minimock.CallerInfo(1)},
+	}
+	mmUpdateTask.expectations = append(mmUpdateTask.expectations, expectation)
+	return expectation
+}
+
+// Then sets up Repo.UpdateTask return parameters for the expectation previously defined by the When method
+func (e *RepoMockUpdateTaskExpectation) Then(err error) *RepoMock {
+	e.results = &RepoMockUpdateTaskResults{err}
+	return e.mock
+}
+
+// Times sets number of times Repo.UpdateTask should be invoked
+func (mmUpdateTask *mRepoMockUpdateTask) Times(n uint64) *mRepoMockUpdateTask {
+	if n == 0 {
+		mmUpdateTask.mock.t.Fatalf("Times of RepoMock.UpdateTask mock can not be zero")
+	}
+	mm_atomic.StoreUint64(&mmUpdateTask.expectedInvocations, n)
+	mmUpdateTask.expectedInvocationsOrigin = minimock.CallerInfo(1)
+	return mmUpdateTask
+}
+
+func (mmUpdateTask *mRepoMockUpdateTask) invocationsDone() bool {
+	if len(mmUpdateTask.expectations) == 0 && mmUpdateTask.defaultExpectation == nil && mmUpdateTask.mock.funcUpdateTask == nil {
+		return true
+	}
+
+	totalInvocations := mm_atomic.LoadUint64(&mmUpdateTask.mock.afterUpdateTaskCounter)
+	expectedInvocations := mm_atomic.LoadUint64(&mmUpdateTask.expectedInvocations)
+
+	return totalInvocations > 0 && (expectedInvocations == 0 || expectedInvocations == totalInvocations)
+}
+
+// UpdateTask implements mm_repo.Repo
+func (mmUpdateTask *RepoMock) UpdateTask(ctx context.Context, m *models.UpdateTaskRequest) (err error) {
+	mm_atomic.AddUint64(&mmUpdateTask.beforeUpdateTaskCounter, 1)
+	defer mm_atomic.AddUint64(&mmUpdateTask.afterUpdateTaskCounter, 1)
+
+	mmUpdateTask.t.Helper()
+
+	if mmUpdateTask.inspectFuncUpdateTask != nil {
+		mmUpdateTask.inspectFuncUpdateTask(ctx, m)
+	}
+
+	mm_params := RepoMockUpdateTaskParams{ctx, m}
+
+	// Record call args
+	mmUpdateTask.UpdateTaskMock.mutex.Lock()
+	mmUpdateTask.UpdateTaskMock.callArgs = append(mmUpdateTask.UpdateTaskMock.callArgs, &mm_params)
+	mmUpdateTask.UpdateTaskMock.mutex.Unlock()
+
+	for _, e := range mmUpdateTask.UpdateTaskMock.expectations {
+		if minimock.Equal(*e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.err
+		}
+	}
+
+	if mmUpdateTask.UpdateTaskMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmUpdateTask.UpdateTaskMock.defaultExpectation.Counter, 1)
+		mm_want := mmUpdateTask.UpdateTaskMock.defaultExpectation.params
+		mm_want_ptrs := mmUpdateTask.UpdateTaskMock.defaultExpectation.paramPtrs
+
+		mm_got := RepoMockUpdateTaskParams{ctx, m}
+
+		if mm_want_ptrs != nil {
+
+			if mm_want_ptrs.ctx != nil && !minimock.Equal(*mm_want_ptrs.ctx, mm_got.ctx) {
+				mmUpdateTask.t.Errorf("RepoMock.UpdateTask got unexpected parameter ctx, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmUpdateTask.UpdateTaskMock.defaultExpectation.expectationOrigins.originCtx, *mm_want_ptrs.ctx, mm_got.ctx, minimock.Diff(*mm_want_ptrs.ctx, mm_got.ctx))
+			}
+
+			if mm_want_ptrs.m != nil && !minimock.Equal(*mm_want_ptrs.m, mm_got.m) {
+				mmUpdateTask.t.Errorf("RepoMock.UpdateTask got unexpected parameter m, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmUpdateTask.UpdateTaskMock.defaultExpectation.expectationOrigins.originM, *mm_want_ptrs.m, mm_got.m, minimock.Diff(*mm_want_ptrs.m, mm_got.m))
+			}
+
+		} else if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmUpdateTask.t.Errorf("RepoMock.UpdateTask got unexpected parameters, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+				mmUpdateTask.UpdateTaskMock.defaultExpectation.expectationOrigins.origin, *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmUpdateTask.UpdateTaskMock.defaultExpectation.results
+		if mm_results == nil {
+			mmUpdateTask.t.Fatal("No results are set for the RepoMock.UpdateTask")
+		}
+		return (*mm_results).err
+	}
+	if mmUpdateTask.funcUpdateTask != nil {
+		return mmUpdateTask.funcUpdateTask(ctx, m)
+	}
+	mmUpdateTask.t.Fatalf("Unexpected call to RepoMock.UpdateTask. %v %v", ctx, m)
+	return
+}
+
+// UpdateTaskAfterCounter returns a count of finished RepoMock.UpdateTask invocations
+func (mmUpdateTask *RepoMock) UpdateTaskAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmUpdateTask.afterUpdateTaskCounter)
+}
+
+// UpdateTaskBeforeCounter returns a count of RepoMock.UpdateTask invocations
+func (mmUpdateTask *RepoMock) UpdateTaskBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmUpdateTask.beforeUpdateTaskCounter)
+}
+
+// Calls returns a list of arguments used in each call to RepoMock.UpdateTask.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmUpdateTask *mRepoMockUpdateTask) Calls() []*RepoMockUpdateTaskParams {
+	mmUpdateTask.mutex.RLock()
+
+	argCopy := make([]*RepoMockUpdateTaskParams, len(mmUpdateTask.callArgs))
+	copy(argCopy, mmUpdateTask.callArgs)
+
+	mmUpdateTask.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockUpdateTaskDone returns true if the count of the UpdateTask invocations corresponds
+// the number of defined expectations
+func (m *RepoMock) MinimockUpdateTaskDone() bool {
+	if m.UpdateTaskMock.optional {
+		// Optional methods provide '0 or more' call count restriction.
+		return true
+	}
+
+	for _, e := range m.UpdateTaskMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	return m.UpdateTaskMock.invocationsDone()
+}
+
+// MinimockUpdateTaskInspect logs each unmet expectation
+func (m *RepoMock) MinimockUpdateTaskInspect() {
+	for _, e := range m.UpdateTaskMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to RepoMock.UpdateTask at\n%s with params: %#v", e.expectationOrigins.origin, *e.params)
+		}
+	}
+
+	afterUpdateTaskCounter := mm_atomic.LoadUint64(&m.afterUpdateTaskCounter)
+	// if default expectation was set then invocations count should be greater than zero
+	if m.UpdateTaskMock.defaultExpectation != nil && afterUpdateTaskCounter < 1 {
+		if m.UpdateTaskMock.defaultExpectation.params == nil {
+			m.t.Errorf("Expected call to RepoMock.UpdateTask at\n%s", m.UpdateTaskMock.defaultExpectation.returnOrigin)
+		} else {
+			m.t.Errorf("Expected call to RepoMock.UpdateTask at\n%s with params: %#v", m.UpdateTaskMock.defaultExpectation.expectationOrigins.origin, *m.UpdateTaskMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcUpdateTask != nil && afterUpdateTaskCounter < 1 {
+		m.t.Errorf("Expected call to RepoMock.UpdateTask at\n%s", m.funcUpdateTaskOrigin)
+	}
+
+	if !m.UpdateTaskMock.invocationsDone() && afterUpdateTaskCounter > 0 {
+		m.t.Errorf("Expected %d calls to RepoMock.UpdateTask at\n%s but found %d calls",
+			mm_atomic.LoadUint64(&m.UpdateTaskMock.expectedInvocations), m.UpdateTaskMock.expectedInvocationsOrigin, afterUpdateTaskCounter)
+	}
+}
+
 // MinimockFinish checks that all mocked methods have been called the expected number of times
 func (m *RepoMock) MinimockFinish() {
 	m.finishOnce.Do(func() {
@@ -1100,6 +1452,8 @@ func (m *RepoMock) MinimockFinish() {
 			m.MinimockDeleteInspect()
 
 			m.MinimockGetInspect()
+
+			m.MinimockUpdateTaskInspect()
 		}
 	})
 }
@@ -1125,5 +1479,6 @@ func (m *RepoMock) minimockDone() bool {
 	return done &&
 		m.MinimockCreateDone() &&
 		m.MinimockDeleteDone() &&
-		m.MinimockGetDone()
+		m.MinimockGetDone() &&
+		m.MinimockUpdateTaskDone()
 }
